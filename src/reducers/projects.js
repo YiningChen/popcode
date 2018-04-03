@@ -98,7 +98,7 @@ export function reduceRoot(stateIn, action) {
   });
 }
 
-export default function reduceProjects(stateIn, action) {
+export default function reduceProjects(stateIn, {type, payload, meta}) {
   let state;
 
   if (stateIn === undefined) {
@@ -107,88 +107,88 @@ export default function reduceProjects(stateIn, action) {
     state = stateIn;
   }
 
-  switch (action.type) {
+  switch (type) {
     case 'PROJECTS_LOADED':
-      return action.payload.reduce(addProject, state);
+      return payload.reduce(addProject, state);
 
     case 'UPDATE_PROJECT_SOURCE':
       return state.setIn(
-        [action.payload.projectKey, 'sources', action.payload.language],
-        action.payload.newValue,
+        [payload.projectKey, 'sources', payload.language],
+        payload.newValue,
       ).setIn(
-        [action.payload.projectKey, 'updatedAt'],
-        action.meta.timestamp,
+        [payload.projectKey, 'updatedAt'],
+        meta.timestamp,
       );
 
     case 'UPDATE_PROJECT_INSTRUCTIONS':
       return state.setIn(
-        [action.payload.projectKey, 'instructions'],
-        action.payload.newValue,
+        [payload.projectKey, 'instructions'],
+        payload.newValue,
       ).setIn(
-        [action.payload.projectKey, 'updatedAt'],
-        action.meta.timestamp,
+        [payload.projectKey, 'updatedAt'],
+        meta.timestamp,
       );
 
     case 'PROJECT_CREATED':
-      return removePristineExcept(state, action.payload.projectKey).set(
-        action.payload.projectKey,
-        new Project({projectKey: action.payload.projectKey}),
+      return removePristineExcept(state, payload.projectKey).set(
+        payload.projectKey,
+        new Project({projectKey: payload.projectKey}),
       );
 
     case 'CHANGE_CURRENT_PROJECT':
-      return removePristineExcept(state, action.payload.projectKey);
+      return removePristineExcept(state, payload.projectKey);
 
     case 'SNAPSHOT_IMPORTED':
       return addProject(
         state,
         assign(
           {},
-          action.payload.project,
-          {projectKey: action.payload.projectKey, updatedAt: null},
+          payload.project,
+          {projectKey: payload.projectKey, updatedAt: null},
         ),
       );
 
     case 'GIST_IMPORTED':
       return importGist(
         state,
-        action.payload.projectKey,
-        action.payload.gistData,
+        payload.projectKey,
+        payload.gistData,
       );
 
     case 'PROJECT_RESTORED_FROM_LAST_SESSION':
-      return addProject(state, action.payload);
+      return addProject(state, payload);
 
     case 'TOGGLE_LIBRARY':
       return state.updateIn(
-        [action.payload.projectKey, 'enabledLibraries'],
+        [payload.projectKey, 'enabledLibraries'],
         (enabledLibraries) => {
-          const {libraryKey} = action.payload;
+          const {libraryKey} = payload;
           if (enabledLibraries.has(libraryKey)) {
             return enabledLibraries.delete(libraryKey);
           }
           return enabledLibraries.add(libraryKey);
         },
       ).setIn(
-        [action.payload.projectKey, 'updatedAt'],
-        action.meta.timestamp,
+        [payload.projectKey, 'updatedAt'],
+        meta.timestamp,
       );
 
     case 'TOGGLE_COMPONENT':
       if (state.getIn(
-        [action.payload.projectKey, 'hiddenUIComponents'],
-      ).has(action.payload.componentKey)) {
-        return unhideComponent(state, action.payload, action.meta.timestamp);
+        [payload.projectKey, 'hiddenUIComponents'],
+      ).has(payload.componentKey)) {
+        return unhideComponent(state, payload, meta.timestamp);
       }
-      return hideComponent(state, action.payload, action.meta.timestamp);
+      return hideComponent(state, payload, meta.timestamp);
 
     case 'STORE_HIDDEN_LINE':
       return state.mergeIn([
-        action.payload.projectKey,
+        payload.projectKey,
         'hiddenUIComponents',
-        action.payload.componentKey,
+        payload.componentKey,
       ], {
-        line: action.payload.line,
-        column: action.payload.column,
+        line: payload.line,
+        column: payload.column,
       });
 
     default:
